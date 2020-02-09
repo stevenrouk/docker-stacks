@@ -1,5 +1,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+# Modified by Steven Rouk February 2020 to create auto-sklearn-notebook.
 
 # Ubuntu 18.04 (bionic)
 # https://hub.docker.com/_/ubuntu/?tab=tags&name=bionic
@@ -25,6 +26,9 @@ RUN apt-get update \
     locales \
     fonts-liberation \
     run-one \
+    curl \
+    gcc \
+    g++ \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
@@ -99,6 +103,18 @@ RUN conda install --quiet --yes 'tini=0.18.0' && \
     conda clean --all -f -y && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
+
+# Install swig
+RUN conda install --quiet --yes -c anaconda swig && \
+    conda clean --all -f -y && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+
+# Install auto-sklearn dependencies
+RUN curl https://raw.githubusercontent.com/automl/auto-sklearn/master/requirements.txt | xargs -n 1 -L 1 pip install
+
+# Install auto-sklearn
+RUN pip install auto-sklearn
 
 # Install Jupyter Notebook, Lab, and Hub
 # Generate a notebook server config
